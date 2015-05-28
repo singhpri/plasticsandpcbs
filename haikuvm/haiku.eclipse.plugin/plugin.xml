@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+    <extension
+        name="Haiku Builder" 
+        id="haiku.eclipse.plugin.builder.hexBuilder" 
+        point="org.eclipse.core.resources.builders">
+      <builder hasNature="false">
+         <run class="haiku.eclipse.plugin.builder.HexBuilder"/>
+      </builder>
+   </extension>
+   <extension
+        name="Haiku Nature"
+        id="haiku.eclipse.plugin.builder.haikuNature"         
+        point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run class="haiku.eclipse.plugin.builder.HaikuNature"/>
+      </runtime>
+      <builder id="haiku.eclipse.plugin.builder.hexBuilder"/>
+   </extension>
+   <extension point="org.eclipse.ui.commands">
+      <category 
+        name="Haiku Nature commands" 
+        id="haiku.eclipse.plugin.builder.haikuNature.category"/>
+      <category 
+        name="Haiku File commands" 
+        id="haiku.eclipse.plugin.builder.haikuFile.category"/>
+      <command 
+        name="Add/Remove Haiku Nature" 
+        id="haiku.eclipse.plugin.builder.addRemoveHaikuNature"
+        defaultHandler="haiku.eclipse.plugin.builder.AddRemoveHaikuNatureHandler"
+        categoryId="haiku.eclipse.plugin.builder.haikuNature.category"/>
+      <command 
+        name="Set Haiku Entry Point file" 
+        id="haiku.eclipse.plugin.builder.setJavaEntryPoint"
+        defaultHandler="haiku.eclipse.plugin.builder.SetJavaEntryPoint"
+        categoryId="haiku.eclipse.plugin.builder.haikuFile.category"/>
+    </extension>
+    <extension point="org.eclipse.ui.menus">
+        <menuContribution locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
+            <command 
+                label="Set file" 
+                commandId="haiku.eclipse.plugin.builder.setJavaEntryPoint" 
+                style="push">
+            
+                <visibleWhen>
+                    <with variable="activeMenuSelection">
+                        <iterate ifEmpty="false">
+                            <adapt type="org.eclipse.core.resources.IResource">
+                                <test property="org.eclipse.core.resources.name" value="*.java" />
+                            </adapt>
+                        </iterate>
+                    </with>
+                </visibleWhen>
+            </command>
+        </menuContribution>
+        <menuContribution locationURI="popup:org.eclipse.ui.projectConfigure?after=additions">
+            <command
+                label="Disable Haiku"
+                commandId="haiku.eclipse.plugin.builder.addRemoveHaikuNature"
+                style="push">
+
+                <visibleWhen checkEnabled="false">
+                    <with variable="selection">
+                        <count value="1"/>
+                        <iterate>
+                            <adapt type="org.eclipse.core.resources.IProject">
+                                <test value="haiku.eclipse.plugin.builder.haikuNature" 
+                                    property="org.eclipse.core.resources.projectNature">
+                                </test>
+                            </adapt>
+                        </iterate>
+                    </with>
+                </visibleWhen>
+             </command>
+            <command
+                commandId="haiku.eclipse.plugin.builder.addRemoveHaikuNature"
+                label="Enable Haiku"
+                style="push">
+                <visibleWhen checkEnabled="false">
+                    <with variable="selection">
+                        <count value="1"/>
+                            <iterate>
+                                <adapt type="org.eclipse.core.resources.IProject">
+                                    <not>
+                                    <test value="haiku.eclipse.plugin.builder.haikuNature"
+                                        property="org.eclipse.core.resources.projectNature">
+                                    </test>
+                                    </not>
+                                </adapt>
+                            </iterate>
+                    </with>
+                </visibleWhen>
+            </command>
+        </menuContribution>
+    </extension>   
+    <extension point="org.eclipse.core.runtime.preferences">
+        <initializer class="haiku.eclipse.plugin.preferences.PreferenceInitializer"/>
+    </extension>
+    <extension point="org.eclipse.ui.preferencePages">
+        <page name="HaikuVM Preferences" id="haiku.eclipse.plugin.preferences.PreferencePage"
+            class="haiku.eclipse.plugin.preferences.PreferencePage">
+        </page>
+    </extension>
+    <extension name="Haiku Build Problem" id="haiku.buildProblem"         
+        point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.core.resources.problemmarker"/>
+        <persistent value="true"/>
+    </extension>   
+</plugin>
