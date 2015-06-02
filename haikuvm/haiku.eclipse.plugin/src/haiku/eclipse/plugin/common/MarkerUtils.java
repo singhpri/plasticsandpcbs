@@ -12,21 +12,26 @@ public class MarkerUtils {
 
   public final static String MISSING_JAVA_ENTRY_POINT_MARKER = "haiku.missingJavaEntryPoint";
   public final static String JAVA_ENTRY_POINT_MISSING_METHODS_MARKER =
-      "haiku.missingJavaEntryPoint";
-
+      "haiku.javaEntryPointMissingMethods";
+  public final static String MISSING_ARDUINO_LIB_PATH_OR_HAIKUVM_PATH =
+      "haiku.missingArduinoLibPathOrHaikuVMPath";
   private static final Map<String, String> errorMarkerTypeToMessageMap = ImmutableMap.of(
       MISSING_JAVA_ENTRY_POINT_MARKER,
       "Please provide a path to the java file containing 'public static void loop()' and "
-          + "'public static void setup()' methods.",
-      JAVA_ENTRY_POINT_MISSING_METHODS_MARKER,
+          + "'public static void setup()' methods.", JAVA_ENTRY_POINT_MISSING_METHODS_MARKER,
       "Please make sure your Haiku entry point class has two methods: public static loop();"
-          + " public static setup(). Visit http://haiku-vm.sourceforge.net/ for more information.");
+          + " public static setup(). Visit http://haiku-vm.sourceforge.net/ for more information.",
+      MISSING_ARDUINO_LIB_PATH_OR_HAIKUVM_PATH,
+      "Please set the path to the Arduino/Libraries folder, and the path to the HaikuVM directory");
 
   public static void addMarker(IResource resource, String markerType) throws CoreException {
     if (!errorMarkerTypeToMessageMap.containsKey(markerType)) {
       throw new NullPointerException("Unexpected request for " + markerType);
     }
-    final IMarker marker = resource.createMarker(markerType);
+    // Delete markers of this type so we always have one marker at most. Without this line, we end
+    // up with multiple markers.
+    removeMarker(resource, markerType);
+    IMarker marker = resource.createMarker(markerType);
     marker.setAttribute(IMarker.MESSAGE, errorMarkerTypeToMessageMap.get(markerType));
     marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH);
     marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
@@ -34,6 +39,17 @@ public class MarkerUtils {
   }
 
   public static void removeMarker(IResource project, String markerType) throws CoreException {
-    project.deleteMarkers(MarkerUtils.MISSING_JAVA_ENTRY_POINT_MARKER, false, IResource.DEPTH_ZERO);
+    project.deleteMarkers(MarkerUtils.MISSING_JAVA_ENTRY_POINT_MARKER, false, IResource.DEPTH_ONE);
+  }
+
+  /** Returns true and adds the marker if the condition is met. Otherwise, clears the marker. */
+  public static boolean checkCondition(boolean condition, IResource resource, String markerType)
+      throws CoreException {
+    if (condition) {
+      addMarker(resource, markerType);
+    } else {
+      removeMarker(resource, markerType);
+    }
+    return condition;
   }
 }

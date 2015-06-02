@@ -1,6 +1,7 @@
 package haiku.eclipse.plugin.preferences;
 
 import haiku.eclipse.plugin.Activator;
+import haiku.eclipse.plugin.common.Utils;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
@@ -18,6 +19,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
   // Workspace preference constants.
   public static final String ARDUINO_LIB_PATH = "arduinoLibPathPreference";
+  public static final String HAIKUVM_PATH = "haikuVMPathPreference";
 
   // Project preference constants.
   public static final String PROJECT_PREFERENCE = "haiku.eclipse.plugin.projectPreference";
@@ -28,6 +30,11 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
   public void initializeDefaultPreferences() {
     final IPreferenceStore store = Activator.getDefault().getPreferenceStore();
     store.setDefault(ARDUINO_LIB_PATH, "");
+    store.setDefault(HAIKUVM_PATH, Utils.tryAndInferHaikuVMBaseDir(null /* project */));
+  }
+
+  public static String getHaikuVMPath() {
+    return Activator.getDefault().getPreferenceStore().getString(HAIKUVM_PATH);
   }
 
   public static String getArduinoLibraryPath() {
@@ -56,5 +63,11 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
           .toOSString());
     }
     preferences.flush();
+  }
+
+  public static boolean hasMissingPreferences() {
+    final IPreferenceStore store = Activator.getDefault().getPreferenceStore();
+    return store.getDefaultString(ARDUINO_LIB_PATH).equals(store.getString(ARDUINO_LIB_PATH))
+        || store.getString(HAIKUVM_PATH).equals(null);
   }
 }

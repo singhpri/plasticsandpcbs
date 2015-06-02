@@ -102,7 +102,17 @@
             class="haiku.eclipse.plugin.preferences.PreferencePage">
         </page>
     </extension>
-    <extension name="Haiku Build Problem" id="haiku.buildProblem"         
+    <extension name="Haiku Build Problem2" id="haiku.missingJavaEntryPoint"         
+        point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.core.resources.problemmarker"/>
+        <persistent value="true"/>
+    </extension>   
+    <extension name="Haiku Build Problem2" id="haiku.javaEntryPointMissingMethods"         
+        point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.core.resources.problemmarker"/>
+        <persistent value="true"/>
+    </extension>   
+    <extension name="Haiku Build Problem3" id="haiku.missingArduinoLibPathOrHaikuVMPath"         
         point="org.eclipse.core.resources.markers">
         <super type="org.eclipse.core.resources.problemmarker"/>
         <persistent value="true"/>

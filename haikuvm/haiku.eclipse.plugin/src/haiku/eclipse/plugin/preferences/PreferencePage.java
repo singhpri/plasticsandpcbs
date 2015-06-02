@@ -26,16 +26,18 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
   }
 
   /**
-   * Creates the field editors. Field editors are abstractions of the common GUI blocks needed to
-   * manipulate various types of preferences. Each field editor knows how to save and restore
-   * itself.
+   * Creates the field editors.
    */
   @Override
   public void createFieldEditors() {
     addField(new DirectoryFieldEditor(PreferenceInitializer.ARDUINO_LIB_PATH,
         "&Arduino Library Folder:", getFieldEditorParent()));
+    addField(new DirectoryFieldEditor(PreferenceInitializer.HAIKUVM_PATH, "&Haiku VM Folder:",
+        getFieldEditorParent()));
   }
 
   @Override
-  public void init(IWorkbench workbench) {}
+  public void init(IWorkbench workbench) {
+
+  }
 }

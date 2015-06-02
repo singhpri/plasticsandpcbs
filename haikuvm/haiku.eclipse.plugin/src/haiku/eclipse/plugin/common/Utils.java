@@ -1,7 +1,6 @@
 package haiku.eclipse.plugin.common;
 
 import haiku.eclipse.plugin.Activator;
-import haiku.eclipse.plugin.preferences.PreferenceInitializer;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -9,7 +8,6 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.ProcessBuilder.Redirect;
 import java.net.URL;
 import java.util.List;
 import java.util.Set;
@@ -42,10 +40,14 @@ import com.google.common.collect.Sets;
 
 public class Utils {
 
-  private static final String CONSOLE_NAME = "HAIKU CONSOLE";
+  private static final String CONSOLE_NAME_PREFIX = "HAIKU CONSOLE : ";
   private static final String WHICH_COMMAND = "which";
   private static final String HAIKU_COMMAND = "haiku.bat";
-  private static final String EXPECTED_HAIKU_LOCATION = "bin\\" + HAIKU_COMMAND;
+  private static final String HAIKU_COMMAND_LOCATION_RELATIVE_TO_HAIKU_BASE_DIR = "bin\\"
+      + HAIKU_COMMAND;
+
+  private static final String ECHO_COMMAND = "echo";
+  private static final String TEMP_DIR_ENV_VAR = "%TEMP%";
 
   private static final String BOOTSTRAP_DOT_JAR_SRC_PATH = "/resources/bootstrap.jar";
   private static final String BOOTSTRAP_DOT_JAR_TGT_PATH = "/lib/bootstrap.jar";
@@ -56,11 +58,7 @@ public class Utils {
   private static final List<String> HAIKU_JAR_LOCATIONS = ImmutableList.of("lib/pc/",
       "lib/examples/", "lib/nxt");
 
-  public enum BuildProblem {
-    NONE, MISSING_LOOP_OR_SETUP
-  };
-
-  public static IFile getFile(IStructuredSelection structuredSelection) {
+  public static IFile toIFile(IStructuredSelection structuredSelection) {
     final Object obj = structuredSelection.getFirstElement();
     IFile file = (IFile) Platform.getAdapterManager().getAdapter(obj, IFile.class);
     if (file == null) {
@@ -71,33 +69,19 @@ public class Utils {
     return file;
   }
 
-  public static String getHaikuBaseDir() throws IOException {
-    final ProcessBuilder builder = new ProcessBuilder();
-    builder.command(WHICH_COMMAND, HAIKU_COMMAND);
-    builder.directory(new File(PreferenceInitializer.getArduinoLibraryPath()));
-    final Process process = builder.start();
-    final BufferedReader reader =
-        new BufferedReader(new InputStreamReader(process.getInputStream()));
-    final BufferedReader errorreader =
-        new BufferedReader(new InputStreamReader(process.getErrorStream()));
-    String line = reader.readLine();
-    if (line == null) {
-      while ((line = errorreader.readLine()) != null) {
-        Utils.tryPrintToConsole(line);
-      }
-      return null;
-    }
-    return line.substring(0, line.indexOf(EXPECTED_HAIKU_LOCATION));
+  public static String tryAndInferHaikuVMBaseDir(IProject project) {
+    return tryAndInferDir(project, HAIKU_COMMAND_LOCATION_RELATIVE_TO_HAIKU_BASE_DIR,
+        WHICH_COMMAND, HAIKU_COMMAND);
   }
 
-  /**
-   * Updates the project class path with
-   */
+  public static String tryAndInferTempDir(IProject project) {
+    return tryAndInferDir(project, null, ECHO_COMMAND, TEMP_DIR_ENV_VAR);
+  }
+
   public static void updateClassPathIfNecessary(IProject project, IProgressMonitor monitor)
       throws JavaModelException, IOException {
-    // Derived from http://www.vogella.com/tutorials/EclipseJDT/article.html#jdt_classpath
     final IJavaProject javaProject = JavaCore.create(project);
-    final String haikuBaseDir = getHaikuBaseDir();
+    final String haikuBaseDir = tryAndInferHaikuVMBaseDir(project);
     final Set<IClasspathEntry> classPathEntrySet = Sets.newHashSet(javaProject.getRawClasspath());
     final Set<String> classPathStringSet =
         FluentIterable.from(classPathEntrySet).transform(new Function<IClasspathEntry, String>() {
@@ -128,16 +112,95 @@ public class Utils {
         classPathEntrySet.add(JavaCore.newLibraryEntry(file.getFullPath(), null, null, false));
       }
     } catch (final Exception ex) {
-      Utils.tryPrintToConsole(ex.toString());
+      Utils.tryPrintToConsole(project, ex.toString());
     }
+
     if (toChange.isEmpty()) {
       return;
     }
+
     for (final String path : toChange) {
       classPathEntrySet.add(JavaCore.newLibraryEntry(new Path(path), null, null));
     }
     javaProject.setRawClasspath(
         FluentIterable.from(classPathEntrySet).toArray(IClasspathEntry.class), null);
+  }
+
+  public static void printToConsole(IProject project, String toWrite) throws IOException {
+    getConsole(project).newOutputStream().write(toWrite);
+  }
+
+  public static void tryPrintToConsole(IProject project, String toWrite) {
+    try {
+      getConsole(project).newOutputStream().write(toWrite);
+    } catch (final IOException ex) {
+    }
+  }
+
+  public static MessageConsole showConsole(IProject project) throws PartInitException {
+    final MessageConsole console = getConsole(project);
+    console.clearConsole();
+    ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
+    return console;
+  }
+
+  public static MessageConsole getConsole(IProject project) {
+    final ConsolePlugin plugin = ConsolePlugin.getDefault();
+    final IConsoleManager conMan = plugin.getConsoleManager();
+    final IConsole[] existing = conMan.getConsoles();
+    String consoleName = CONSOLE_NAME_PREFIX;
+    if (project != null) {
+      consoleName = CONSOLE_NAME_PREFIX + project.getName();
+    }
+    for (final IConsole element : existing) {
+      if (consoleName.equals(element.getName())) {
+        return (MessageConsole) element;
+      }
+    }
+    // no console found, so create a new one
+    final MessageConsole myConsole = new MessageConsole(consoleName, null);
+    conMan.addConsoles(new IConsole[] {myConsole});
+    return myConsole;
+  }
+
+  private static String tryAndInferDir(IProject project, String dirLocationRelativeToCommand,
+      String... commands) {
+    final ProcessBuilder builder = new ProcessBuilder();
+    builder.command(commands);
+    BufferedReader reader = null;
+    BufferedReader errorReader = null;
+    try {
+      final Process process = builder.start();
+      reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+      errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+      String line = reader.readLine();
+      if (line == null) {
+        while ((line = errorReader.readLine()) != null) {
+          Utils.tryPrintToConsole(project, line);
+        }
+        return null;
+      }
+      String location = line;
+      if (dirLocationRelativeToCommand != null) {
+        location = line.substring(0, line.indexOf(dirLocationRelativeToCommand));
+      }
+      if (new File(location).exists()) {
+        return location;
+      }
+    } catch (final IOException ex) {
+      Utils.tryPrintToConsole(project, ex.toString());
+      try {
+        if (reader != null) {
+          reader.close();
+        }
+        if (errorReader != null) {
+          errorReader.close();
+        }
+      } catch (final IOException exx) {
+        Utils.tryPrintToConsole(project, exx.toString());
+      }
+    }
+    return null;
   }
 
   private static IFile addJar(IProject project, String srcPath, String targetPath,
@@ -165,7 +228,7 @@ public class Utils {
     return file;
   }
 
-  public static void prepare(IContainer container) throws CoreException {
+  private static void prepare(IContainer container) throws CoreException {
     if (!(container instanceof IFolder)) {
       return;
     }
@@ -174,65 +237,5 @@ public class Utils {
       prepare(folder.getParent());
       folder.create(false, false, null);
     }
-  }
-
-  public static BuildProblem runProcess(IProject project, String... command) throws IOException,
-      PartInitException {
-    final ProcessBuilder builder = new ProcessBuilder();
-    builder.command(command);
-    builder.redirectErrorStream(true);
-    builder.directory(new File(PreferenceInitializer.getArduinoLibraryPath()));
-    builder.redirectOutput(Redirect.PIPE);
-    final MessageConsole console = Utils.getConsole();
-    // builder.
-    final Process process = builder.start();
-    BufferedReader reader = null;
-    BuildProblem problem = BuildProblem.NONE;
-    try {
-      reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-      String line = null;
-
-      while ((line = reader.readLine()) != null) {
-        if (line.contains("problem finding method")) {
-          problem = BuildProblem.MISSING_LOOP_OR_SETUP;
-        }
-        console.newMessageStream().println(line);
-      }
-    } finally {
-      reader.close();
-    }
-    return problem;
-  };
-
-  public static void printToConsole(String toWrite) throws IOException {
-    getConsole().newOutputStream().write(toWrite);
-  }
-
-  public static void tryPrintToConsole(String toWrite) {
-    try {
-      getConsole().newOutputStream().write(toWrite);
-    } catch (final IOException ex) {
-    }
-  }
-
-  public static MessageConsole showConsole(IProject project) throws PartInitException {
-    final MessageConsole console = getConsole();
-    ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
-    return console;
-  }
-
-  private static MessageConsole getConsole() {
-    final ConsolePlugin plugin = ConsolePlugin.getDefault();
-    final IConsoleManager conMan = plugin.getConsoleManager();
-    final IConsole[] existing = conMan.getConsoles();
-    for (final IConsole element : existing) {
-      if (CONSOLE_NAME.equals(element.getName())) {
-        return (MessageConsole) element;
-      }
-    }
-    // no console found, so create a new one
-    final MessageConsole myConsole = new MessageConsole(CONSOLE_NAME, null);
-    conMan.addConsoles(new IConsole[] {myConsole});
-    return myConsole;
   }
 }

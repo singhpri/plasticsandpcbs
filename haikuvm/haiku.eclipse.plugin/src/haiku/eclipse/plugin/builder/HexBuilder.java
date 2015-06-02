@@ -1,63 +1,124 @@
 package haiku.eclipse.plugin.builder;
 
+import haiku.eclipse.plugin.Activator;
+import haiku.eclipse.plugin.common.BuildProblem;
 import haiku.eclipse.plugin.common.MarkerUtils;
 import haiku.eclipse.plugin.common.Utils;
-import haiku.eclipse.plugin.common.Utils.BuildProblem;
 import haiku.eclipse.plugin.preferences.PreferenceInitializer;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.ProcessBuilder.Redirect;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.console.MessageConsole;
 
 public class HexBuilder extends IncrementalProjectBuilder {
 
   public static final String BUILDER_ID = "haiku.eclipse.plugin.builder.hexBuilder";
+  private static Path temporaryDirectory;
 
   @SuppressWarnings("rawtypes")
   @Override
   protected IProject[] build(int kind, Map args, IProgressMonitor monitor) throws CoreException {
 
     try {
+      if (Activator.getDefault() == null) {
+        return null;
+      }
       super.forgetLastBuiltState();
+      Utils.showConsole(getProject());
       Utils.updateClassPathIfNecessary(getProject(), monitor);
+
+      if (MarkerUtils.checkCondition(PreferenceInitializer.hasMissingPreferences(), getProject(),
+          MarkerUtils.MISSING_ARDUINO_LIB_PATH_OR_HAIKUVM_PATH)) {
+        return null;
+      }
 
       final IResource resource =
           getProject().findMember(PreferenceInitializer.getEntryPointJavaFile(getProject(), true));
-      if (resource == null) {
-        MarkerUtils.addMarker(getProject(), MarkerUtils.MISSING_JAVA_ENTRY_POINT_MARKER);
+      if (MarkerUtils.checkCondition(resource == null, resource,
+          MarkerUtils.MISSING_JAVA_ENTRY_POINT_MARKER)) {
         return null;
-      } else {
-        MarkerUtils.removeMarker(getProject(), MarkerUtils.MISSING_JAVA_ENTRY_POINT_MARKER);
       }
+
       final String entryPointJavaPath =
           PreferenceInitializer.getEntryPointJavaFile(getProject(), false);
-
-      /*
-       * if (entryPointJavaPath == null || entryPointJavaPath.trim().equals("")) {
-       * Utils.printToConsole
-       * ("Error: Please provide a path to the java file containing your 'loop' and 'setup' methods."
-       * ); return null; }
-       */
-      Utils.tryPrintToConsole("Processing file: " + entryPointJavaPath);
-      Utils.showConsole(getProject());
-      final BuildProblem problem =
-          Utils.runProcess(getProject(), Utils.getHaikuBaseDir() + "\\bin\\haiku.bat", "-v",
-              "--Config", "arduinoIDE", entryPointJavaPath);
-      if (problem != BuildProblem.NONE) {
-        Utils.tryPrintToConsole("Please make sure your Haiku entry point class has a public "
-            + "static loop(); public static setup()");
-        MarkerUtils.addMarker(resource, MarkerUtils.JAVA_ENTRY_POINT_MISSING_METHODS_MARKER);
-      } else {
-        MarkerUtils.removeMarker(resource, MarkerUtils.JAVA_ENTRY_POINT_MISSING_METHODS_MARKER);
+      Path targetPath =
+          Paths.get(PreferenceInitializer.getArduinoLibraryPath() + "/" + getProject().getName());
+      if (temporaryDirectory == null) {
+        temporaryDirectory = Files.createTempDirectory("HaikuVMPlugin");
+      }
+      Path projectTemporaryDir =
+          Paths.get(temporaryDirectory.toAbsolutePath().toString(), getProject().getName());
+      if (!projectTemporaryDir.toFile().exists()) {
+        Files.createDirectory(projectTemporaryDir);
+      }
+      synchronized (getProject()) {
+        if (targetPath.toFile().exists()) {
+          FileUtils.deleteDirectory(targetPath.toFile());
+        }
+        final BuildProblem problem =
+            runHaikuVM(getProject(), projectTemporaryDir.toFile(), entryPointJavaPath);
+        if (!MarkerUtils.checkCondition(problem != null && !"".equals(problem.getError()),
+            resource, MarkerUtils.JAVA_ENTRY_POINT_MISSING_METHODS_MARKER)) {
+          FileUtils.copyDirectory(
+              Paths.get(projectTemporaryDir.toAbsolutePath().toString(), "HaikuVM").toFile(),
+              targetPath.toFile());
+        }
       }
     } catch (final IOException ex) {
-      Utils.tryPrintToConsole(ex.toString());
+      Utils.tryPrintToConsole(getProject(), ex.toString());
     }
     return null;
   }
+
+  private static BuildProblem runHaikuVM(IProject project, File workingDir,
+      String entryPointJavaPath) throws IOException, PartInitException {
+    final ProcessBuilder builder = new ProcessBuilder();
+    builder.command(Utils.tryAndInferHaikuVMBaseDir(project) + "\\bin\\haiku.bat", "-v",
+        "--Config", "arduinoIDE", entryPointJavaPath);
+    // builder.redirectErrorStream(true);
+    builder.directory(workingDir);
+    builder.redirectOutput(Redirect.PIPE);
+    final MessageConsole console = Utils.getConsole(project);
+    // builder.
+    final Process process = builder.start();
+    BufferedReader reader = null;
+    BuildProblem problem = null;
+    try {
+      reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+      String line = null;
+
+      while ((line = reader.readLine()) != null) {
+        console.newMessageStream().println(line);
+      }
+    } finally {
+      reader.close();
+    }
+    try {
+      reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+      String line = null;
+      StringBuilder errorBuilder = new StringBuilder();
+      while ((line = reader.readLine()) != null) {
+        errorBuilder.append(line + "\n");
+      }
+      problem = new BuildProblem(errorBuilder.toString());
+    } finally {
+      reader.close();
+    }
+    return problem;
+  };
 }
