@@ -3,6 +3,8 @@ package haiku.eclipse.plugin.preferences;
 import haiku.eclipse.plugin.Activator;
 import haiku.eclipse.plugin.common.Utils;
 
+import java.nio.file.Paths;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.IPath;
@@ -47,7 +49,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
     final String path =
         preferences.get(JAVA_ENTRY_POINT_CLASS_PREFERENCE, JAVA_ENTRY_POINT_CLASS_DEFAULT);
     if (!relative) {
-      return project.getLocation().toString() + "/" + path;
+      return Paths.get(project.getLocation().toString(), path).toString();
     }
     return path;
   }

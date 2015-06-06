@@ -55,18 +55,6 @@ public class AddRemoveHaikuNatureHandler extends AbstractHandler {
     }
     description.setNatureIds(FluentIterable.from(natures).toArray(String.class));
     project.setDescription(description, null);
-    /*
-     * for (int i = 0; i < natures.length; ++i) { if (HaikuNature.NATURE_ID.equals(natures[i])) {
-     * final String[] newNatures = new String[natures.length - 1]; System.arraycopy(natures, 0,
-     * newNatures, 0, i); System.arraycopy(natures, i + 1, newNatures, i, natures.length - i - 1);
-     * description.setNatureIds(newNatures); project.setDescription(description, null); return; } }
-     */
-
-    /*
-     * final String[] newNatures = new String[natures.length + 1]; System.arraycopy(natures, 0,
-     * newNatures, 0, natures.length); newNatures[natures.length] = HaikuNature.NATURE_ID;
-     * description.setNatureIds(newNatures); project.setDescription(description, null);
-     */
   }
 
 }

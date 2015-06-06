@@ -5,7 +5,7 @@
         name="Haiku Builder" 
         id="haiku.eclipse.plugin.builder.hexBuilder" 
         point="org.eclipse.core.resources.builders">
-      <builder hasNature="false">
+      <builder hasNature="true">
          <run class="haiku.eclipse.plugin.builder.HexBuilder"/>
       </builder>
    </extension>
@@ -17,6 +17,13 @@
          <run class="haiku.eclipse.plugin.builder.HaikuNature"/>
       </runtime>
       <builder id="haiku.eclipse.plugin.builder.hexBuilder"/>
+   </extension>
+   <extension point="org.eclipse.core.runtime.adapters">
+      <factory 
+        class="haiku.eclipse.plugin.adapter.AdapterFactory" 
+        adaptableType="org.eclipse.core.resources.IResource">
+        <adapter type="haiku.eclipse.plugin.adapter.EntryPointClass"/>
+      </factory>
    </extension>
    <extension point="org.eclipse.ui.commands">
       <category 
@@ -35,26 +42,58 @@
         id="haiku.eclipse.plugin.builder.setJavaEntryPoint"
         defaultHandler="haiku.eclipse.plugin.builder.SetJavaEntryPoint"
         categoryId="haiku.eclipse.plugin.builder.haikuFile.category"/>
+      <command 
+        name="Load to Arduino" 
+        id="haiku.eclipse.plugin.builder.loadArduinoCommand"
+        defaultHandler="haiku.eclipse.plugin.builder.LoadArduinoCommand"
+        categoryId="haiku.eclipse.plugin.builder.haikuNature.category"/>
     </extension>
     <extension point="org.eclipse.ui.menus">
         <menuContribution locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
             <command 
-                label="Set file" 
+                label="Set HaikuVM Java Class" 
                 commandId="haiku.eclipse.plugin.builder.setJavaEntryPoint" 
                 style="push">
             
-                <visibleWhen>
+                <enabledWhen>
                     <with variable="activeMenuSelection">
-                        <iterate ifEmpty="false">
-                            <adapt type="org.eclipse.core.resources.IResource">
-                                <test property="org.eclipse.core.resources.name" value="*.java" />
+                        <and>
+                        <adapt type="org.eclipse.core.resources.IResource">
+                            <test 
+                                forcePluginActivation="true"
+                                property="org.eclipse.core.resources.name"
+                                value="*.java" />
+                        </adapt>
+                        <adapt type="org.eclipse.core.resources.IResource">
+                            <test
+                                forcePluginActivation="true"
+                                property="haiku.eclipse.plugin.properties.isEntryPoint"
+                                value="false" />
+                        </adapt>
+                        </and>
+                    </with>
+                </enabledWhen>
+            </command>
+        </menuContribution>
+        <menuContribution locationURI="popup:org.eclipse.ui.projectConfigure?after=additions">
+            <command
+                categoryId="haiku.eclipse.plugin.builder.haikuNature.category"
+                label="Load Arduino"
+                commandId="haiku.eclipse.plugin.builder.loadArduinoCommand"
+                style="push">
+                <visibleWhen checkEnabled="false">
+                    <with variable="selection">
+                        <count value="1"/>
+                        <iterate>
+                            <adapt type="org.eclipse.core.resources.IProject">
+                                <test value="haiku.eclipse.plugin.builder.haikuNature" 
+                                    property="org.eclipse.core.resources.projectNature">
+                                </test>
                             </adapt>
                         </iterate>
                     </with>
                 </visibleWhen>
             </command>
-        </menuContribution>
-        <menuContribution locationURI="popup:org.eclipse.ui.projectConfigure?after=additions">
             <command
                 label="Disable Haiku"
                 commandId="haiku.eclipse.plugin.builder.addRemoveHaikuNature"
@@ -102,7 +141,7 @@
             class="haiku.eclipse.plugin.preferences.PreferencePage">
         </page>
     </extension>
-    <extension name="Haiku Build Problem2" id="haiku.missingJavaEntryPoint"         
+    <extension name="Haiku Build Problem1" id="haiku.missingJavaEntryPoint"         
         point="org.eclipse.core.resources.markers">
         <super type="org.eclipse.core.resources.problemmarker"/>
         <persistent value="true"/>
@@ -116,5 +155,20 @@
         point="org.eclipse.core.resources.markers">
         <super type="org.eclipse.core.resources.problemmarker"/>
         <persistent value="true"/>
+    </extension>
+    <extension name="Haiku Build Problem3" id="haiku.buildError"         
+        point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.core.resources.problemmarker"/>
+        <persistent value="true"/>
+    </extension>
+    <extension
+          point="org.eclipse.core.expressions.propertyTesters">
+       <propertyTester
+             class="haiku.eclipse.plugin.properties.HaikuPropertyTester"
+             id="haiku.eclipse.plugin.properties.haikuPropertyTester"
+             namespace="haiku.eclipse.plugin.properties"
+             properties="isEntryPoint"
+             type="org.eclipse.jdt.core.ICompilationUnit">
+       </propertyTester>
     </extension>   
 </plugin>

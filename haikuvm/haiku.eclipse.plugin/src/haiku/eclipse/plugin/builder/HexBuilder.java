@@ -39,62 +39,59 @@ public class HexBuilder extends IncrementalProjectBuilder {
         return null;
       }
       super.forgetLastBuiltState();
-      Utils.showConsole(getProject());
       Utils.updateClassPathIfNecessary(getProject(), monitor);
 
       if (MarkerUtils.checkCondition(PreferenceInitializer.hasMissingPreferences(), getProject(),
           MarkerUtils.MISSING_ARDUINO_LIB_PATH_OR_HAIKUVM_PATH)) {
         return null;
       }
-
-      final IResource resource =
-          getProject().findMember(PreferenceInitializer.getEntryPointJavaFile(getProject(), true));
-      if (MarkerUtils.checkCondition(resource == null, resource,
-          MarkerUtils.MISSING_JAVA_ENTRY_POINT_MARKER)) {
-        return null;
-      }
-
-      final String entryPointJavaPath =
-          PreferenceInitializer.getEntryPointJavaFile(getProject(), false);
-      Path targetPath =
-          Paths.get(PreferenceInitializer.getArduinoLibraryPath() + "/" + getProject().getName());
-      if (temporaryDirectory == null) {
-        temporaryDirectory = Files.createTempDirectory("HaikuVMPlugin");
-      }
-      Path projectTemporaryDir =
-          Paths.get(temporaryDirectory.toAbsolutePath().toString(), getProject().getName());
-      if (!projectTemporaryDir.toFile().exists()) {
-        Files.createDirectory(projectTemporaryDir);
-      }
-      synchronized (getProject()) {
-        if (targetPath.toFile().exists()) {
-          FileUtils.deleteDirectory(targetPath.toFile());
-        }
-        final BuildProblem problem =
-            runHaikuVM(getProject(), projectTemporaryDir.toFile(), entryPointJavaPath);
-        if (!MarkerUtils.checkCondition(problem != null && !"".equals(problem.getError()),
-            resource, MarkerUtils.JAVA_ENTRY_POINT_MISSING_METHODS_MARKER)) {
-          FileUtils.copyDirectory(
-              Paths.get(projectTemporaryDir.toAbsolutePath().toString(), "HaikuVM").toFile(),
-              targetPath.toFile());
-        }
-      }
+      buildProject(getProject(), "arduinoIDE");
     } catch (final IOException ex) {
       Utils.tryPrintToConsole(getProject(), ex.toString());
     }
     return null;
   }
 
+  public static void buildProject(IProject project, String configSwitch) throws CoreException,
+      IOException {
+    final IResource resource =
+        project.findMember(PreferenceInitializer.getEntryPointJavaFile(project, true));
+    if (MarkerUtils.checkCondition(resource == null, resource,
+        MarkerUtils.MISSING_JAVA_ENTRY_POINT_MARKER)) {
+      return;
+    }
+
+    final String entryPointJavaPath = PreferenceInitializer.getEntryPointJavaFile(project, false);
+    Path targetPath =
+        Paths.get(PreferenceInitializer.getArduinoLibraryPath() + "/" + project.getName());
+    Path projectTemporaryDir =
+        Paths.get(getTemporaryDirectory().toAbsolutePath().toString(), project.getName());
+    if (!projectTemporaryDir.toFile().exists()) {
+      Files.createDirectory(projectTemporaryDir);
+    }
+    synchronized (project) {
+      if (targetPath.toFile().exists()) {
+        FileUtils.deleteDirectory(targetPath.toFile());
+      }
+      final BuildProblem problem =
+          runHaikuVM(project, projectTemporaryDir.toFile(), entryPointJavaPath, configSwitch);
+      if (!MarkerUtils.checkCondition(problem != null && !"".equals(problem.getError()), resource,
+          MarkerUtils.HAIKU_BUILD_ERROR, problem.getError())) {
+        FileUtils.copyDirectory(
+            Paths.get(projectTemporaryDir.toAbsolutePath().toString(), "HaikuVM").toFile(),
+            targetPath.toFile());
+      }
+    }
+  }
+
   private static BuildProblem runHaikuVM(IProject project, File workingDir,
-      String entryPointJavaPath) throws IOException, PartInitException {
+      String entryPointJavaPath, String configSwitch) throws IOException, PartInitException {
     final ProcessBuilder builder = new ProcessBuilder();
     builder.command(Utils.tryAndInferHaikuVMBaseDir(project) + "\\bin\\haiku.bat", "-v",
-        "--Config", "arduinoIDE", entryPointJavaPath);
-    // builder.redirectErrorStream(true);
+        "--Config", configSwitch, entryPointJavaPath);
     builder.directory(workingDir);
     builder.redirectOutput(Redirect.PIPE);
     final MessageConsole console = Utils.getConsole(project);
-    // builder.
     final Process process = builder.start();
     BufferedReader reader = null;
     BuildProblem problem = null;
@@ -121,4 +118,12 @@ public class HexBuilder extends IncrementalProjectBuilder {
     }
     return problem;
   };
+
+  private static Path getTemporaryDirectory() throws IOException {
+    if (temporaryDirectory != null) {
+      return temporaryDirectory;
+    }
+    temporaryDirectory = Files.createTempDirectory("HaikuVMPlugin");
+    return temporaryDirectory;
+  }
 }
