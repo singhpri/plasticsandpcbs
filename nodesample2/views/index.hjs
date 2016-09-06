@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ title }}</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="https://code.createjs.com/easeljs-0.8.2.min.js"></script>
+  </head>
+  <body>
+    <h1>{{ title }}</h1>
+    <p>Welcome to {{ title }}</p>
+    <button onclick="myFunction()">Try it</button>
+    <button onclick="myFunction2()">Try it2</button>
+    <p id="demo"></p>
+    <script>
+        function myFunction() {
+            document.getElementById("demo").innerHTML = Math.random();
+        }
+        function myFunction2() {
+            var x = document.createElement("CANVAS");
+            var ctx = x.getContext("2d");
+            ctx.fillStyle = "#FF0000";
+            ctx.fillRect(20, 20, 150, 100);
+            document.body.appendChild(x);
+            //Create a stage by getting a reference to the canvas
+            stage = new createjs.Stage(x);
+            //Create a Shape DisplayObject.
+            circle = new createjs.Shape();
+            circle.graphics.beginFill("red").drawCircle(0, 0, 40);
+            //Set position of Shape instance.
+            circle.x = circle.y = 50;
+            //Add Shape instance to stage display list.
+            stage.addChild(circle);
+            //Update stage will render next frame
+            stage.update();
+        }
+    </script>
+  </body>
+</html>
