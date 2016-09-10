@@ -1,0 +1,35 @@
+"use strict";
+var router_1 = require('@angular/router');
+var questionlist_component_1 = require("./question/questionlist.component");
+var doctor_component_1 = require("./doctor/doctor.component");
+var appRoutes = [
+    /*
+    {
+        path: 'heroes',
+        component: HeroesComponent
+    },
+    {
+        path: 'dashboard',
+        component: DashboardComponent
+    },
+    {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+    },
+    {
+        path: 'detail/:id',
+        component: HeroDetailComponent
+    }
+    */
+    {
+        path: 'question/:id',
+        component: questionlist_component_1.QuestionListComponent
+    },
+    {
+        path: '',
+        component: doctor_component_1.DoctorComponent
+    }
+];
+exports.routing = router_1.RouterModule.forRoot(appRoutes);
+//# sourceMappingURL=app.routing.js.map
