@@ -1,19 +1,22 @@
-import { NgModule }       from '@angular/core';
-import { DQuestion } from "./dquestion.component";
-import { QuestionService } from "./question.service";
-import { CommonModule } from "@angular/common";
-import { FormsModule } from "@angular/forms";
+import { NgModule }         from '@angular/core';
+import { QuestionAnswerComponent }        from "./question.answer.component";
+import { QuestionService }  from "./question.service";
+import { CommonModule }     from "@angular/common";
+import { FormsModule }      from "@angular/forms";
+import {QuestionListComponent} from "./questionlist.component";
 
 @NgModule({
     declarations: [
-        DQuestion,
+        QuestionAnswerComponent,
+        QuestionListComponent,
     ],
     imports: [
       FormsModule,
       CommonModule,
     ],
     exports: [
-        DQuestion,
+        QuestionAnswerComponent,
+        QuestionListComponent,
     ],
     bootstrap: [
     ],
@@ -21,4 +24,4 @@ import { FormsModule } from "@angular/forms";
         QuestionService
     ]
 })
-export class DQuestionModule { }
+export class QuestionModule { }

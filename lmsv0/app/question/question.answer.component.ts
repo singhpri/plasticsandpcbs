@@ -10,24 +10,28 @@ import { Question } from "./question";
         <div *ngIf="question != null">
             <h1>{{ question.title }}</h1>
                 <li *ngFor="let item of question.answers">
-                    <input [(ngModel)]="answer" name="{{'question:' + question.id}}" (select)="answerSelected($event)" value="{{item}}" type="radio">{{item}}                    
+                    <input [(ngModel)]="answer"
+                        name="{{'question:' + question.id}}"
+                        (select)="answerSelected($event)"
+                        value="{{item}}"
+                        type="radio">{{item}}                    
                 </li>
                 <span *ngIf="debug">{{ answer }}</span>
         </div>        
     `
 })
 
-export class QuestionComponent {
+export class QuestionAnswerComponent {
 
     @Input()
     question: Question;
     answer: string;
     debug: boolean = true;
 
-    @Output
+    @Output()
     answerProvided = new EventEmitter();
 
-    answerSelected(event) : void {
+    answerSelected(event: any) : void {
         this.answerProvided.emit({value: event.value});
     }
 }

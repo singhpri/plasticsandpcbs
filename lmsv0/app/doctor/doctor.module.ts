@@ -1,24 +1,26 @@
 import { NgModule }       from '@angular/core';
-import { DQuestion } from "./dquestion.component";
-import { QuestionService } from "./question.service";
+import { DoctorComponent} from "./doctor.component";
+import { DoctorService } from "./doctor.service";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
+import { Doctor } from "./doctor";
+
 
 @NgModule({
     declarations: [
-        DQuestion,
+        DoctorComponent,
     ],
     imports: [
       FormsModule,
       CommonModule,
     ],
     exports: [
-        DQuestion,
+        DoctorComponent,
     ],
     bootstrap: [
     ],
     providers: [
-        QuestionService
+        DoctorService
     ]
 })
-export class DQuestionModule { }
+export class DoctorModule { }

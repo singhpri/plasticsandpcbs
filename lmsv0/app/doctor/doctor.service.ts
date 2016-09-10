@@ -2,15 +2,13 @@
  * Created by chinm_000 on 9/9/2016.
  */
 import { Injectable } from '@angular/core';
+import { DOCTORS } from "./mock-doctors";
+import { Doctor } from "./doctor";
 
-import { Question } from './question';
-import { QUESTIONS } from './mock-questions';
 
 @Injectable()
-export class QuestionService {
-    getNextQuestion(): Promise<Question> {
-        var randomIndex = Math.floor(Math.random() * (QUESTIONS.length - 1));
-        console.log('randomIndex:' + randomIndex);
-        return Promise.resolve(QUESTIONS[randomIndex]);
+export class DoctorService {
+    getDoctors(): Promise<Doctor[]> {
+        return Promise.resolve(DOCTORS);
     }
 }

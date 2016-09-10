@@ -1,5 +1,4 @@
-export class Question {
+export class Doctor {
     id: string;
-    title: string;
-    answers: string[];
+    name: string;
 }

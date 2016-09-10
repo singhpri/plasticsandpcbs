@@ -1,39 +1,42 @@
 /**
  * Created by chinm_000 on 9/9/2016.
  */
-import { Component, Input, OnInit } from '@angular/core';
-import { QuestionService } from "./question.service";
-import { Question } from "./question";
+import {Component, Input, OnInit, EventEmitter, Output} from '@angular/core';
+import { DoctorService } from "./doctor.service";
+import { Doctor } from "./doctor";
 
 @Component({
-    selector: "question",
+    selector: "doctor",
     template: `
-        <div *ngIf="question != null">
-            <h1>{{ question.title }}</h1>
-                <li *ngFor="let item of question.answers">
-                    <input [(ngModel)]="answer" name="{{'question:' + question.id}}" value="{{item}}" type="radio">{{item}}                    
-                </li>
-                <span *ngIf="debug">{{ answer }}</span>
+        <div *ngIf="doctors != null">
+            <div *ngFor="let doctor of doctors">
+                <button (click)="onClick(doctor)">{{doctor.name}}</button>                    
+            </div>
+            <span *ngIf="debug && (selectedDoctor != null) ">{{ selectedDoctor.name }}</span>
         </div>        
     `
 })
 
-export class DQuestion implements OnInit {
-    //@Input()
-    //questionId: string;
-    question: Question;
-    answer: string;
+export class DoctorComponent implements OnInit {
+    doctors: Doctor[];
+    selectedDoctor: Doctor;
+
+    @Output() doctorSelected = new EventEmitter();
+
     debug: boolean = true;
 
-    constructor(private questionService: QuestionService) {
-        this.questionService = questionService;
+    constructor(private doctorService: DoctorService) { }
+
+    onClick(doctor: Doctor) : void {
+        this.selectedDoctor = doctor;
+        this.doctorSelected.emit({value: this.selectedDoctor});
     }
 
     ngOnInit() : void {
-        this.questionService.getNextQuestion()
+        this.doctorService.getDoctors()
             .then(result => {
-                this.question = result;
-                console.log("Question Retrieved: " + JSON.stringify(this.question))
+                this.doctors = result;
+                console.log("Doctor Retrieved: " + JSON.stringify(this.doctors))
             });
     }
 }

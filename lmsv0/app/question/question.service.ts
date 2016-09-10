@@ -11,6 +11,7 @@ export class QuestionService {
 
     private questions : Question[];
 
+    /*
     getNumberOfQuestions(): number {
         this.checkNullOrEmptyQuestions();
         return this.questions.length;
@@ -22,9 +23,10 @@ export class QuestionService {
         this.checkNullOrEmptyQuestions();
         return QUESTIONS[index];
     }
+    */
 
-    resetQuestionsForCategory(categoryId: number): void {
-        Promise.resolve(QUESTIONS).then(questions => this.questions = questions);
+    resetQuestionsForCategory(categoryId: string): Promise<Question[]> {
+        return Promise.resolve(QUESTIONS);
     }
 
     private checkNullOrEmptyQuestions(): void {
