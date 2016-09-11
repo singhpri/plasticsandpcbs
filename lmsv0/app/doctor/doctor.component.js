@@ -13,15 +13,19 @@ var __metadata = (this && this.__metadata) || function (k, v) {
  */
 var core_1 = require('@angular/core');
 var doctor_service_1 = require("./doctor.service");
+var router_1 = require("@angular/router");
 var DoctorComponent = (function () {
-    function DoctorComponent(doctorService) {
+    function DoctorComponent(doctorService, router) {
         this.doctorService = doctorService;
+        this.router = router;
         this.doctorSelected = new core_1.EventEmitter();
         this.debug = true;
     }
     DoctorComponent.prototype.onClick = function (doctor) {
         this.selectedDoctor = doctor;
         this.doctorSelected.emit({ value: this.selectedDoctor });
+        var link = ['question', this.selectedDoctor.id];
+        this.router.navigate(link);
     };
     DoctorComponent.prototype.ngOnInit = function () {
         var _this = this;
@@ -40,7 +44,7 @@ var DoctorComponent = (function () {
             selector: "doctor",
             template: "\n        <div *ngIf=\"doctors != null\">\n            <div *ngFor=\"let doctor of doctors\">\n                <button (click)=\"onClick(doctor)\">{{doctor.name}}</button>                    \n            </div>\n            <span *ngIf=\"debug && (selectedDoctor != null) \">{{ selectedDoctor.name }}</span>\n        </div>        \n    "
         }), 
-        __metadata('design:paramtypes', [doctor_service_1.DoctorService])
+        __metadata('design:paramtypes', [doctor_service_1.DoctorService, router_1.Router])
     ], DoctorComponent);
     return DoctorComponent;
 }());
