@@ -4,6 +4,7 @@
 import {Component, Input, OnInit, EventEmitter, Output} from '@angular/core';
 import { DoctorService } from "./doctor.service";
 import { Doctor } from "./doctor";
+import {Router} from "@angular/router";
 
 @Component({
     selector: "doctor",
@@ -25,11 +26,13 @@ export class DoctorComponent implements OnInit {
 
     debug: boolean = true;
 
-    constructor(private doctorService: DoctorService) { }
+    constructor(private doctorService: DoctorService, private router : Router) { }
 
     onClick(doctor: Doctor) : void {
         this.selectedDoctor = doctor;
         this.doctorSelected.emit({value: this.selectedDoctor});
+        let link = ['question', this.selectedDoctor.id];
+        this.router.navigate(link);
     }
 
     ngOnInit() : void {
