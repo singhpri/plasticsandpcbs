@@ -12,7 +12,7 @@ import { Question } from "./question";
                 <li *ngFor="let item of question.answers">
                     <input [(ngModel)]="answer"
                         name="{{'question:' + question.id}}"
-                        (select)="answerSelected($event)"
+                        (click)="answerSelected($event)"
                         value="{{item}}"
                         type="radio">{{item}}                    
                 </li>

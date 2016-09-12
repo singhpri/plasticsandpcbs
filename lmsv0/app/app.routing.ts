@@ -1,12 +1,10 @@
 import { ModuleWithProviders } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
-import { HeroesComponent } from './heroes.component';
-import { HeroDetailComponent } from './hero-detail.component';
-import { DashboardComponent } from './dashboard.component';
-import { QuestionAnswerComponent } from "./question/question.answer.component";
 import { QuestionListComponent } from "./question/questionlist.component";
-import {DoctorComponent} from "./doctor/doctor.component";
+import { DoctorComponent } from "./doctor/doctor.component";
+import {ThankYouComponent} from "./std/thankyou.component";
+import {Globals} from "./Globals";
 
 const appRoutes: Routes = [
     /*
@@ -29,12 +27,16 @@ const appRoutes: Routes = [
     }
     */
     {
-        path: 'question/:id',
+        path: [Globals.QUESTION_LIST_PAGE, '/:id'].join(''),
         component: QuestionListComponent
     },
     {
         path: '',
-        component: DoctorComponent
+        component: DoctorComponent,
+    },
+    {
+        path: Globals.THANK_YOU_PAGE,
+        component: ThankYouComponent
     }
 ];
 

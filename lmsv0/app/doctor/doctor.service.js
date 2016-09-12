@@ -15,10 +15,18 @@ var core_1 = require('@angular/core');
 var mock_doctors_1 = require("./mock-doctors");
 var DoctorService = (function () {
     function DoctorService() {
+        this.doctorSelected = new core_1.EventEmitter();
     }
     DoctorService.prototype.getDoctors = function () {
         return Promise.resolve(mock_doctors_1.DOCTORS);
     };
+    DoctorService.prototype.setActiveDoctor = function (selectedDoctor) {
+        this.doctorSelected.emit({ value: selectedDoctor });
+    };
+    __decorate([
+        core_1.Output(), 
+        __metadata('design:type', Object)
+    ], DoctorService.prototype, "doctorSelected", void 0);
     DoctorService = __decorate([
         core_1.Injectable(), 
         __metadata('design:paramtypes', [])

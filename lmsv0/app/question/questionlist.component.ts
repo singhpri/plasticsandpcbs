@@ -27,15 +27,14 @@ export class QuestionListComponent implements OnInit {
 
     constructor(private route: ActivatedRoute, private questionService: QuestionService) {}
 
-    /*
+
     nextQuestion(event: any) : void {
+        this.questionIndex++;
         if (this.questions.length == this.questionIndex) {
-            // route to thank you component.
-        } else {
-            this.questionIndex++;
+            this.questionService.questionsAnswered();
         }
     }
-    */
+
     ngOnInit() : void {
         this.route.params.forEach((params: Params) => {
             console.log("In route for each in question list");

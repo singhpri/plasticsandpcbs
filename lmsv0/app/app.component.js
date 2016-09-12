@@ -10,24 +10,34 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 var core_1 = require('@angular/core');
 var router_1 = require("@angular/router");
+var doctor_service_1 = require("./doctor/doctor.service");
+var question_service_1 = require("./question/question.service");
+var Globals_1 = require("./Globals");
 var AppComponent = (function () {
-    function AppComponent(router) {
+    function AppComponent(router, doctorService, questionService) {
+        var _this = this;
         this.router = router;
-        this.title = "MDVal";
+        this.doctorService = doctorService;
+        this.questionService = questionService;
+        doctorService.doctorSelected.subscribe(function (event) { return _this.doctorChanged(event); });
+        questionService.questionsAnsweredEvent.subscribe(function (event) { return _this.showThankYouPage(); });
     }
-    AppComponent.prototype.routeToQuestions = function (event) {
-        var doctor = event.value;
-        this.currentDoctorId = doctor.id;
-        var link = ['question', this.currentDoctorId];
+    AppComponent.prototype.doctorChanged = function (event) {
+        var link = [Globals_1.Globals.QUESTION_LIST_PAGE, event.value.id];
         this.router.navigate(link);
+    };
+    AppComponent.prototype.showThankYouPage = function () {
+        var _this = this;
+        this.router.navigate([Globals_1.Globals.THANK_YOU_PAGE]);
+        setTimeout(function () { _this.router.navigate(['']); }, 6000);
     };
     AppComponent = __decorate([
         core_1.Component({
             selector: 'lms',
-            template: "    \n    <router-outlet>        \n    </router-outlet>\n    ",
+            template: "\n    <router-outlet></router-outlet>\n    ",
             styleUrls: ['app/app.component.css'],
         }), 
-        __metadata('design:paramtypes', [router_1.Router])
+        __metadata('design:paramtypes', [router_1.Router, doctor_service_1.DoctorService, question_service_1.QuestionService])
     ], AppComponent);
     return AppComponent;
 }());

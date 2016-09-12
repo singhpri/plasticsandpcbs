@@ -15,28 +15,21 @@ var core_1 = require('@angular/core');
 var mock_questions_1 = require('./mock-questions');
 var QuestionService = (function () {
     function QuestionService() {
+        this.questionsAnsweredEvent = new core_1.EventEmitter();
     }
-    /*
-    getNumberOfQuestions(): number {
-        this.checkNullOrEmptyQuestions();
-        return this.questions.length;
-    }
-
-    getQuestion(index: number): Question {
-        //var randomIndex = Math.floor(Math.random() * (QUESTIONS.length - 1));
-        //console.log('randomIndex:' + randomIndex);
-        this.checkNullOrEmptyQuestions();
-        return QUESTIONS[index];
-    }
-    */
     QuestionService.prototype.resetQuestionsForCategory = function (categoryId) {
-        return Promise.resolve(mock_questions_1.QUESTIONS);
+        return Promise.resolve(mock_questions_1.QUESTIONS.filter(function (element, index, array) {
+            var question = element;
+            return question.categoryId === categoryId;
+        }));
     };
-    QuestionService.prototype.checkNullOrEmptyQuestions = function () {
-        if (this.questions === null || this.questions.length === 0) {
-            throw new Error("No Questions Found");
-        }
+    QuestionService.prototype.questionsAnswered = function () {
+        this.questionsAnsweredEvent.emit({ value: true });
     };
+    __decorate([
+        core_1.Output(), 
+        __metadata('design:type', Object)
+    ], QuestionService.prototype, "questionsAnsweredEvent", void 0);
     QuestionService = __decorate([
         core_1.Injectable(), 
         __metadata('design:paramtypes', [])

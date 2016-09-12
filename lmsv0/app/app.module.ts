@@ -10,6 +10,7 @@ import { HeroService }          from './hero.service';
 import { DashboardComponent }   from './dashboard.component';
 import { QuestionModule }      from "./question/question.module";
 import { DoctorModule }         from "./doctor/doctor.module";
+import {ThankYouComponent} from "./std/thankyou.component";
 
 @NgModule({
   imports: [
@@ -23,7 +24,8 @@ import { DoctorModule }         from "./doctor/doctor.module";
     AppComponent,
     HeroesComponent,
     DashboardComponent,
-    HeroDetailComponent
+    HeroDetailComponent,
+    ThankYouComponent
   ],
   bootstrap: [
     AppComponent
