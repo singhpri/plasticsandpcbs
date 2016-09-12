@@ -32,7 +32,7 @@ var QuestionAnswerComponent = (function () {
     QuestionAnswerComponent = __decorate([
         core_1.Component({
             selector: "question",
-            template: "\n        <div *ngIf=\"question != null\">\n            <h1>{{ question.title }}</h1>\n                <li *ngFor=\"let item of question.answers\">\n                    <input [(ngModel)]=\"answer\"\n                        name=\"{{'question:' + question.id}}\"\n                        (select)=\"answerSelected($event)\"\n                        value=\"{{item}}\"\n                        type=\"radio\">{{item}}                    \n                </li>\n                <span *ngIf=\"debug\">{{ answer }}</span>\n        </div>        \n    "
+            template: "\n        <div *ngIf=\"question != null\">\n            <h1>{{ question.title }}</h1>\n                <li *ngFor=\"let item of question.answers\">\n                    <input [(ngModel)]=\"answer\"\n                        name=\"{{'question:' + question.id}}\"\n                        (click)=\"answerSelected($event)\"\n                        value=\"{{item}}\"\n                        type=\"radio\">{{item}}                    \n                </li>\n                <span *ngIf=\"debug\">{{ answer }}</span>\n        </div>        \n    "
         }), 
         __metadata('design:paramtypes', [])
     ], QuestionAnswerComponent);

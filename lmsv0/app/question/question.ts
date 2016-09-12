@@ -3,4 +3,5 @@ export class Question {
     categoryId: string;
     title: string;
     answers: string[];
+    deepDiveQuestions?: Question[]
 }

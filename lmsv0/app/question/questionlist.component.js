@@ -21,15 +21,12 @@ var QuestionListComponent = (function () {
         this.questionIndex = 0;
         this.debug = true;
     }
-    /*
-    nextQuestion(event: any) : void {
+    QuestionListComponent.prototype.nextQuestion = function (event) {
+        this.questionIndex++;
         if (this.questions.length == this.questionIndex) {
-            // route to thank you component.
-        } else {
-            this.questionIndex++;
+            this.questionService.questionsAnswered();
         }
-    }
-    */
+    };
     QuestionListComponent.prototype.ngOnInit = function () {
         var _this = this;
         this.route.params.forEach(function (params) {

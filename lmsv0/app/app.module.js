@@ -19,6 +19,7 @@ var hero_service_1 = require('./hero.service');
 var dashboard_component_1 = require('./dashboard.component');
 var question_module_1 = require("./question/question.module");
 var doctor_module_1 = require("./doctor/doctor.module");
+var thankyou_component_1 = require("./std/thankyou.component");
 var AppModule = (function () {
     function AppModule() {
     }
@@ -35,7 +36,8 @@ var AppModule = (function () {
                 app_component_1.AppComponent,
                 heroes_component_1.HeroesComponent,
                 dashboard_component_1.DashboardComponent,
-                hero_detail_component_1.HeroDetailComponent
+                hero_detail_component_1.HeroDetailComponent,
+                thankyou_component_1.ThankYouComponent
             ],
             bootstrap: [
                 app_component_1.AppComponent

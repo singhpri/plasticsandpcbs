@@ -18,27 +18,19 @@ var DoctorComponent = (function () {
     function DoctorComponent(doctorService, router) {
         this.doctorService = doctorService;
         this.router = router;
-        this.doctorSelected = new core_1.EventEmitter();
         this.debug = true;
     }
     DoctorComponent.prototype.onClick = function (doctor) {
-        this.selectedDoctor = doctor;
-        this.doctorSelected.emit({ value: this.selectedDoctor });
-        var link = ['question', this.selectedDoctor.id];
-        this.router.navigate(link);
+        this.doctorService.setActiveDoctor(doctor);
     };
     DoctorComponent.prototype.ngOnInit = function () {
         var _this = this;
         this.doctorService.getDoctors()
             .then(function (result) {
             _this.doctors = result;
-            console.log("Doctor Retrieved: " + JSON.stringify(_this.doctors));
+            console.log("Doctors Retrieved: " + JSON.stringify(_this.doctors));
         });
     };
-    __decorate([
-        core_1.Output(), 
-        __metadata('design:type', Object)
-    ], DoctorComponent.prototype, "doctorSelected", void 0);
     DoctorComponent = __decorate([
         core_1.Component({
             selector: "doctor",

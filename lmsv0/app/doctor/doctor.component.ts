@@ -20,26 +20,20 @@ import {Router} from "@angular/router";
 
 export class DoctorComponent implements OnInit {
     doctors: Doctor[];
-    selectedDoctor: Doctor;
-
-    @Output() doctorSelected = new EventEmitter();
 
     debug: boolean = true;
 
     constructor(private doctorService: DoctorService, private router : Router) { }
 
     onClick(doctor: Doctor) : void {
-        this.selectedDoctor = doctor;
-        this.doctorSelected.emit({value: this.selectedDoctor});
-        let link = ['question', this.selectedDoctor.id];
-        this.router.navigate(link);
+        this.doctorService.setActiveDoctor(doctor);
     }
 
     ngOnInit() : void {
         this.doctorService.getDoctors()
             .then(result => {
                 this.doctors = result;
-                console.log("Doctor Retrieved: " + JSON.stringify(this.doctors))
+                console.log("Doctors Retrieved: " + JSON.stringify(this.doctors))
             });
     }
 }
