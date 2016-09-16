@@ -20,7 +20,7 @@ var AppComponent = (function () {
         this.name = 'Your Name';
         this.mobile = 'Mobile Phone';
         this.person = {
-            name: 'Your Name',
+            name: '',
             mobile: 0
         };
     }
@@ -29,12 +29,13 @@ var AppComponent = (function () {
             selector: 'my-app',
             template: '<div>' +
                 '<label> Your name: </label>' +
-                '<input value="{{person.name}}" placeholder="name">' +
+                '<div><input [(ngModel)] ="person.name" placeholder="name"></div>' +
                 '</div>' +
                 '<div>' +
                 '<label> Mobile Phone: </label>' +
-                '<input value="{{person.mobile}}" placeholder="mobile">' +
-                '</div>'
+                '<div><input [(ngModel)] ="person.mobile" placeholder="mobile"></div>' +
+                '</div>',
+            styles: ["\n    label {\n      text-align: center;\n      color:#A9A9A9;\n      font-size: 40px;\n      font-family: \"arial\", sans-serif;\n    }\n    input {\n    width: 400px;\n    height: 50px;\n    padding: 12px, 20px;\n    margin: 8px 0;\n    box-sizing: border-box;\n    border: 1px solid gray;\n    background-color: light gray;\n    \n    }\n    "]
         }), 
         __metadata('design:paramtypes', [])
     ], AppComponent);
